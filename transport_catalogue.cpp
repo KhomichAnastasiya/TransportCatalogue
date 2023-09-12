@@ -31,6 +31,18 @@ detail::Bus* TransportCatalogue::findBus(std::string_view name)
     return busname_to_bus_[name];
 }
 
+void TransportCatalogue::setRouteDistGeo(std::string_view bus_name, double geo_dist)
+{
+    busname_to_geodist_[bus_name] = geo_dist;
+}
+
+double TransportCatalogue::getRouteDistGeo(std::string_view bus_name)
+{
+    if (busname_to_geodist_.find(bus_name) != busname_to_geodist_.end())
+        return busname_to_geodist_[bus_name];
+    else return -1;
+}
+
 void TransportCatalogue::setDistanceBetwenStops(const detail::Stop* first_stop, const detail::Stop* second_stop, int distance)
 {
     distanse_betwen_stops_[{first_stop, second_stop}] = distance;
@@ -57,24 +69,11 @@ detail::BusInfo TransportCatalogue::getBusInfo(const detail::Bus* bus)
     std::unordered_set<std::string_view> uniq;
     for(const auto& stop: stops) {
         uniq.insert(std::move(stop->name));
-    }
-
+    }   
     bus_info.count_unique_stops = uniq.size();
-
-    bus_info.geo_route_length = 0;
-    for(int num = 0; num < static_cast<int>(stops.size()) - 1; ++num)
-    {
-        Coordinates coordinates_from;
-        coordinates_from.lat = stops[num]->latitude;
-        coordinates_from.lng = stops[num]->longitude;
-
-        Coordinates coordinates_to;
-        coordinates_to.lat = stops[num + 1]->latitude;
-        coordinates_to.lng = stops[num + 1]->longitude;
-        bus_info.geo_route_length += ComputeDistance(coordinates_from, coordinates_to);
-    }
-
+    bus_info.geo_route_length = getRouteDistGeo(bus->name);
     bus_info.real_route_length = 0;
+
     for(int num = 0; num < static_cast<int>(stops.size()) - 1; ++num)
     {
         bus_info.real_route_length += getDistanceBetwenStops(stops[num], stops[num + 1]);

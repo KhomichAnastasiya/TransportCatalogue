@@ -85,6 +85,13 @@ void InputReader::parseRouteRequest(TransportCatalogue& catalogue, std::string& 
     bool end = false;
     std::string stop_name = "";
 
+    int num_iteration = 0;
+    Coordinates coordinates_from;
+    Coordinates coordinates_to;
+    coordinates_from.lat = -1;
+    coordinates_from.lng = -1;
+    double geo_dist = 0;
+
     if (request.find(">") != -1)
     {
         while (end == false)
@@ -98,8 +105,19 @@ void InputReader::parseRouteRequest(TransportCatalogue& catalogue, std::string& 
             else
                 stop_name = trim(request.substr(0, pos));
 
-            bus_->route.push_back(catalogue.findStop("Stop " + stop_name));
+            detail::Stop* stop = catalogue.findStop("Stop " + stop_name);
+            bus_->route.push_back(stop);
             request.erase(0, pos + 1);
+
+            if (num_iteration != 0)
+            {
+                coordinates_to.lat = stop->latitude;
+                coordinates_to.lng = stop->longitude;
+                geo_dist += ComputeDistance(coordinates_from, coordinates_to);
+            }
+            coordinates_from.lat = stop->latitude;
+            coordinates_from.lng = stop->longitude;
+            ++num_iteration;
         }
     }
     else
@@ -119,8 +137,19 @@ void InputReader::parseRouteRequest(TransportCatalogue& catalogue, std::string& 
             else
                 stop_name = trim(request.substr(0, pos));
 
-            bus_->route.push_back(catalogue.findStop("Stop " + stop_name));
+            detail::Stop* stop = catalogue.findStop("Stop " + stop_name);
+            bus_->route.push_back(stop);
             request.erase(0, pos + 1);
+
+            if (num_iteration != 0)
+            {
+                coordinates_to.lat = stop->latitude;
+                coordinates_to.lng = stop->longitude;
+                geo_dist += ComputeDistance(coordinates_from, coordinates_to);
+            }
+            coordinates_from.lat = stop->latitude;
+            coordinates_from.lng = stop->longitude;
+            ++num_iteration;
         }
 
         while (reverse_end == false)
@@ -134,11 +163,23 @@ void InputReader::parseRouteRequest(TransportCatalogue& catalogue, std::string& 
             else
                 stop_name = trim(reverse_direction.substr(reverse_pos + 1));
 
-            bus_->route.push_back(catalogue.findStop("Stop " + stop_name));
+            detail::Stop* stop = catalogue.findStop("Stop " + stop_name);
+            bus_->route.push_back(stop);
             if (reverse_pos != -1)
                 reverse_direction.erase(reverse_pos);
+
+            if (num_iteration != 0)
+            {
+                coordinates_to.lat = stop->latitude;
+                coordinates_to.lng = stop->longitude;
+                geo_dist += ComputeDistance(coordinates_from, coordinates_to);
+            }
+            coordinates_from.lat = stop->latitude;
+            coordinates_from.lng = stop->longitude;
+            ++num_iteration;
         }
     }
+    catalogue.setRouteDistGeo(bus_->name, geo_dist);
 }
 
 void InputReader::separatingRequests(std::istream& input)

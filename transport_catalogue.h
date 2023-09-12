@@ -65,6 +65,10 @@ public:
     detail::Bus* findBus(std::string_view name);
     detail::BusInfo getBusInfo(const detail::Bus* bus);
     detail::StopInfo getStopInfo(const detail::Stop* stop);
+
+    void setRouteDistGeo(std::string_view bus_name, double geo_dist);
+    double getRouteDistGeo(std::string_view bus_name);
+    //real distance betwen stops
     void setDistanceBetwenStops(const detail::Stop* first_stop, const detail::Stop* second_stop, int distance);
     int getDistanceBetwenStops(const detail::Stop* first_stop, const detail::Stop* second_stop);
 
@@ -74,6 +78,7 @@ private:
     std::unordered_map<std::string_view, detail::Stop*> stopname_to_stop_;
     std::unordered_map<std::string_view, detail::Bus*> busname_to_bus_;
     std::unordered_map<std::string, std::set<std::string>> stopname_to_busname_;
+    std::unordered_map<std::string_view, double> busname_to_geodist_;
     std::unordered_map<std::pair<const detail::Stop*,const detail::Stop*>, int, detail::PairHasher<const detail::Stop*>> distanse_betwen_stops_;
 };
 
